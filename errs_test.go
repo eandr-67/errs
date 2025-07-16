@@ -5,64 +5,37 @@ import (
 	"testing"
 )
 
-func TestErrs_initIfNil(t *testing.T) {
-	var err Errors
-	err.initIfNil()
-	if err == nil {
-		t.Errorf("err.initIfNil(): got %v; want not nil", err)
-	}
-	tmp := err
-	err.initIfNil()
-	err["a"] = []string{"b"}
-	if v, ok := tmp["a"]; !ok || v[0] != "b" {
-		t.Errorf("err.initIfNil(): got %v; want %v", tmp, err)
-	}
-}
-
 func TestErrs_Add(t *testing.T) {
-	var err Errors
-	err.Add("key", "value")
-	if len(err) != 1 {
-		t.Errorf("len(err) = %d; want 1", len(err))
-	}
-	err.Add("p", "q")
-	if len(err) != 2 {
-		t.Errorf("len(err) = %d; want 2", len(err))
-	}
-	err.Add("key", "test")
-	if len(err) != 2 {
-		t.Errorf("len(err) = %d; want 2", len(err))
-	}
-	if !slices.Equal(err["p"], []string{"q"}) {
-		t.Errorf("err['p'] = %v; want %v", err["p"], []string{"q"})
-	}
-	if !slices.Equal(err["key"], []string{"value", "test"}) {
-		t.Errorf("err['key'] = %v; want %v", err["key"], []string{"value", "test"})
-	}
-}
+	var err = Errors{}
 
-func TestErrs_AddMessages(t *testing.T) {
-	var err Errors
-
-	err.AddMessages("key", []string{})
-	if err == nil {
-		t.Errorf("err.AddMessages(): got %v; want not nil", err)
-	}
+	err.Add("key")
 	if len(err) != 0 {
 		t.Errorf("len(err) = %d; want 0", len(err))
 	}
 
-	err.AddMessages("key", []string{"value", "test"})
+	err.Add("key", "value", "test")
 	if len(err) != 1 {
 		t.Errorf("len(err) = %d; want 1", len(err))
 	}
+	if len(err["key"]) != 2 {
+		t.Errorf(`len(err["key"]) = %d; want 2`, len(err["key"]))
+	}
+	if !slices.Equal(err["key"], []string{"value", "test"}) {
+		t.Errorf(`len(err["key"]) = %v; want %v`, err["key"], []string{"value", "test"})
+	}
 
-	err.AddMessages("q", []string{"r"})
+	err.Add("q", "r")
 	if len(err) != 2 {
 		t.Errorf("len(err) = %d; want 2", len(err))
 	}
+	if len(err["q"]) != 1 {
+		t.Errorf(`len(err["q"]) = %d; want 1`, len(err["q"]))
+	}
+	if !slices.Equal(err["q"], []string{"r"}) {
+		t.Errorf(`len(err["q"]) = %v; want %v`, err["q"], []string{"r"})
+	}
 
-	err.addMessages("key", []string{"top", "down"})
+	err.Add("key", "top", "down")
 	if len(err) != 2 {
 		t.Errorf("len(err) = %d; want 2", len(err))
 	}
@@ -81,21 +54,22 @@ func TestErrs_AddMessages(t *testing.T) {
 }
 
 func TestErrs_AddErrors(t *testing.T) {
-	var err1, err2 Errors
+	var err1 = Errors{}
+	var err2 = Errors{}
 
 	err1.AddErrors("xxx", err2)
 	if len(err1) != 0 {
 		t.Errorf("len(err1) = %d; want 0", len(err1))
 	}
 
-	err2.AddMessages("zzz", []string{})
+	err2.Add("zzz")
 	err1.AddErrors("xxx", err2)
 	if len(err1) != 0 {
 		t.Errorf("len(err1) = %d; want 0", len(err1))
 	}
 
-	err2.AddMessages("p", []string{"1", "2"})
-	err2.addMessages("q", []string{"3"})
+	err2.Add("p", "1", "2")
+	err2.Add("q", "3")
 	err1.AddErrors("i.", err2)
 	err1.AddErrors("j.", err2)
 	err1.AddErrors("i.", err2)
