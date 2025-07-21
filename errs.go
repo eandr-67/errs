@@ -6,22 +6,31 @@ package errs
 // массив строк - информация об ошибках, относящихся к этой сущности.
 type Errors map[string][]string
 
-// Add добавляет ошибки с текстами messages к сущности с ключом key
-func (e *Errors) Add(key string, messages ...string) {
-	if len(messages) == 0 {
-		return
+// Add добавляет ошибки с текстами msg к сущности с ключом key
+func (err *Errors) Add(key string, msg ...string) *Errors {
+	if len(msg) == 0 {
+		return err
 	}
-	if v, ok := (*e)[key]; !ok {
-		(*e)[key] = messages
+	if (*err) == nil {
+		*err = Errors{key: msg}
 	} else {
-		(*e)[key] = append(v, messages...)
+		(*err)[key] = append((*err)[key], msg...)
 	}
+	return err
 }
 
 // AddErrors добавляет информацию из хранилища err к хранилищу e.
-// К каждому ключу, полученному из err, перед добавлением слева приписывается prefix.
-func (e *Errors) AddErrors(prefix string, errors Errors) {
-	for k, v := range errors {
-		e.Add(prefix+k, v...)
+// Если добавляемый ключ - пустая строка или ключ начинается символом '[', к нему слева дописывается prefix.
+// Иначе к ключу слева дописывается prefix+".".
+//
+// Это позволяет сформировать корректный JS-путь к ошибочному элементу, состоящий из имён полей и индексов массивов.
+func (err *Errors) AddErrors(prefix string, add Errors) *Errors {
+	for key, val := range add {
+		if key == "" || key[0] == '[' {
+			err.Add(prefix+key, val...)
+		} else {
+			err.Add(prefix+"."+key, val...)
+		}
 	}
+	return err
 }
