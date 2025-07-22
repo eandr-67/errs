@@ -26,6 +26,16 @@ func TestErrs_AddErrors(t *testing.T) {
 	err1.AddErrors("xxx", err2)
 	assert.Nil(t, err1)
 
-	err1.AddErrors("qqq", *(err2.Add("", "aaa").Add("[3]", "bbb").Add("yyy", "ccc")))
-	assert.Equal(t, err1, Errors{"qqq": {"aaa"}, "qqq[3]": {"bbb"}, "qqq.yyy": {"ccc"}})
+	err1.AddErrors("qqq", *(err2.Add("", "aaa").Add("3", "bbb").Add("yyy", "ccc")))
+	assert.Equal(t, err1, Errors{"qqq": {"aaa"}, "qqq.3": {"bbb"}, "qqq.yyy": {"ccc"}})
+}
+
+func TestSetDelimiter(t *testing.T) {
+	SetDelimiter("~^~")
+
+	var err1 Errors
+	var err2 Errors
+
+	err1.AddErrors("qqq", *(err2.Add("", "aaa").Add("3", "bbb").Add("yyy", "ccc")))
+	assert.Equal(t, err1, Errors{"qqq": {"aaa"}, "qqq~^~3": {"bbb"}, "qqq~^~yyy": {"ccc"}})
 }
